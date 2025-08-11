@@ -12,18 +12,14 @@ async function sendMessage() {
   chatBox.appendChild(userMessage);
   userInput.value = '';
 
-  // Call xAI Grok API
+  // Call backend API
   try {
-    const response = await fetch('https://api.x.ai/v1/grok', {
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer YOUR_XAI_API_KEY' // Replace with your xAI API key
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        prompt: message,
-        model: 'grok-3'
-      })
+      body: JSON.stringify({ message })
     });
 
     const data = await response.json();
