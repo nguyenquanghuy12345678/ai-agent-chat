@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -16,18 +16,26 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${process.env.XAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'grok-beta',
+        model: 'grok-3',
         messages: [{ role: 'user', content: message }]
       })
     });
 
-    const data = await response.json();
+    if (!response.ok) {
+      if (response.status === 429) {
+        return res.status(429).json({ error: 'Rate limit exceeded. Please try again later.' });
+      } else if (response.status === 401) {
+        return res.status(401).json({ error: 'Invalid API key.' });
+      } else {
+        return res.status(response.status).json({ error: `HTTP error: ${response.status}` });
+      }
+    }
 
-    res.status(200).json({
-      text: data?.choices?.[0]?.message?.content || 'No response from AI'
-    });
+    const data = await response.json();
+    const aiResponse = data.choices?.[0]?.message?.content || 'No response from AI';
+    res.status(200).json({ text: aiResponse });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error connecting to the API' });
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-}
+};
