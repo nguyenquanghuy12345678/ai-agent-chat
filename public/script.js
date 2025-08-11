@@ -79,6 +79,11 @@ async function sendMessage() {
     console.error('Lỗi:', error);
     errorMessage.textContent = `Lỗi: ${error.message}`;
     errorMessage.style.display = 'block';
+    // Thêm tin nhắn lỗi vào chatBox để người dùng thấy
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'message ai-message';
+    errorDiv.textContent = `AI: ${error.message}`;
+    chatBox.appendChild(errorDiv);
   } finally {
     // Ẩn loading và kích hoạt lại input/nút
     userInput.disabled = false;

@@ -21,23 +21,28 @@ module.exports = async (req, res) => {
       })
     });
 
+    // Kiểm tra trạng thái phản hồi
     if (!response.ok) {
       let errorMessage = 'Lỗi không xác định từ API';
       try {
-        const errorData = await response.text();
+        const errorText = await response.text();
         if (response.status === 429) {
           errorMessage = 'Quá giới hạn yêu cầu. Vui lòng thử lại sau.';
         } else if (response.status === 401) {
-          errorMessage = 'API key không hợp lệ.';
-        } else if (errorData.includes('<!DOCTYPE') || errorData.includes('<html')) {
-          errorMessage = 'Nhận được phản hồi HTML thay vì JSON. Kiểm tra endpoint API.';
+          errorMessage = 'API key không hợp lệ. Kiểm tra lại trong Vercel.';
+        } else if (errorText.includes('<!DOCTYPE') || errorText.includes('<html')) {
+          errorMessage = 'Nhận được phản hồi HTML. Kiểm tra endpoint hoặc API key.';
+        } else {
+          errorMessage = `Lỗi HTTP ${response.status}: ${errorText.slice(0, 50)}...`;
         }
       } catch (textError) {
-        console.error('Lỗi khi đọc phản hồi:', textError);
+        console.error('Lỗi đọc phản hồi:', textError);
+        errorMessage = `Lỗi không đọc được phản hồi: ${response.status}`;
       }
       return res.status(response.status).json({ error: errorMessage });
     }
 
+    // Kiểm tra và phân tích JSON
     let data;
     try {
       data = await response.json();
@@ -49,7 +54,7 @@ module.exports = async (req, res) => {
     const aiResponse = data.choices?.[0]?.message?.content || 'Không nhận được phản hồi từ AI';
     res.status(200).json({ text: aiResponse });
   } catch (error) {
-    console.error('Lỗi:', error);
-    res.status(500).json({ error: 'Lỗi máy chủ nội bộ' });
+    console.error('Lỗi kết nối:', error);
+    res.status(500).json({ error: 'Lỗi máy chủ nội bộ. Kiểm tra log.' });
   }
 };
