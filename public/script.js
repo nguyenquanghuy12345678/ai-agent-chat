@@ -5,39 +5,21 @@ async function sendMessage() {
   const message = userInput.value.trim();
   if (!message) return;
 
-  // Display user message
-  const userMessage = document.createElement('div');
-  userMessage.className = 'message user-message';
-  userMessage.textContent = `You: ${message}`;
-  chatBox.appendChild(userMessage);
+  chatBox.innerHTML += `<div class="message user-message">You: ${message}</div>`;
   userInput.value = '';
 
-  // Call backend API
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message })
     });
 
     const data = await response.json();
-    const aiResponse = data.text || 'Sorry, I could not process your request.';
-
-    // Display AI response
-    const aiMessage = document.createElement('div');
-    aiMessage.className = 'message ai-message';
-    aiMessage.textContent = `AI: ${aiResponse}`;
-    chatBox.appendChild(aiMessage);
-  } catch (error) {
-    console.error('Error:', error);
-    const errorMessage = document.createElement('div');
-    errorMessage.className = 'message ai-message';
-    errorMessage.textContent = 'AI: Error connecting to the API.';
-    chatBox.appendChild(errorMessage);
+    chatBox.innerHTML += `<div class="message ai-message">AI: ${data.text}</div>`;
+  } catch (err) {
+    chatBox.innerHTML += `<div class="message ai-message">AI: Error connecting to the API.</div>`;
   }
 
-  // Scroll to the bottom of the chat box
   chatBox.scrollTop = chatBox.scrollHeight;
 }
