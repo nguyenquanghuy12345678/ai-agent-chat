@@ -1,5 +1,8 @@
 const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
+const errorMessage = document.getElementById('errorMessage');
+const sendButton = document.getElementById('sendButton');
+const loadingIndicator = document.getElementById('loadingIndicator');
 
 async function loadHistory() {
   try {
@@ -23,7 +26,9 @@ async function loadHistory() {
       chatBox.scrollTop = chatBox.scrollHeight;
     }
   } catch (error) {
-    console.error('Error loading history:', error);
+    console.error('Lỗi tải lịch sử:', error);
+    errorMessage.textContent = 'Không thể tải lịch sử trò chuyện.';
+    errorMessage.style.display = 'block';
   }
 }
 
@@ -31,14 +36,19 @@ async function sendMessage() {
   const message = userInput.value.trim();
   if (!message) return;
 
-  // Display user message
+  // Hiển thị loading và vô hiệu hóa input/nút
+  userInput.disabled = true;
+  sendButton.disabled = true;
+  loadingIndicator.style.display = 'inline';
+  errorMessage.style.display = 'none';
+
+  // Hiển thị tin nhắn người dùng
   const userMessage = document.createElement('div');
   userMessage.className = 'message user-message';
   userMessage.textContent = `You: ${message}`;
   chatBox.appendChild(userMessage);
   userInput.value = '';
 
-  // Call backend API
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -51,31 +61,31 @@ async function sendMessage() {
       throw new Error(data.error);
     }
 
-    const aiResponse = data.text || 'No response from AI';
+    const aiResponse = data.text || 'Không nhận được phản hồi từ AI';
 
-    // Display AI response
+    // Hiển thị phản hồi AI
     const aiMessage = document.createElement('div');
     aiMessage.className = 'message ai-message';
     aiMessage.textContent = `AI: ${aiResponse}`;
     chatBox.appendChild(aiMessage);
 
-    // Save to history (if history endpoint exists)
+    // Lưu lịch sử
     await fetch('/api/history', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, response: aiResponse })
     });
   } catch (error) {
-    console.error('Error:', error);
-    const errorMessage = document.createElement('div');
-    errorMessage.className = 'message ai-message';
-    errorMessage.textContent = `AI: ${error.message}`;
-    chatBox.appendChild(errorMessage);
+    console.error('Lỗi:', error);
+    errorMessage.textContent = `Lỗi: ${error.message}`;
+    errorMessage.style.display = 'block';
+  } finally {
+    // Ẩn loading và kích hoạt lại input/nút
+    userInput.disabled = false;
+    sendButton.disabled = false;
+    loadingIndicator.style.display = 'none';
+    chatBox.scrollTop = chatBox.scrollHeight;
   }
-
-  // Scroll to the bottom
-  chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Load history on page load
 document.addEventListener('DOMContentLoaded', loadHistory);

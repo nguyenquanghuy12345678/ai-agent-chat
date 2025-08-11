@@ -11,15 +11,14 @@
     <header>
       <h1>🤖 AI Agent</h1>
     </header>
-
+    <div class="error-message" id="errorMessage" style="display: none;"></div>
     <div class="chat-box" id="chatBox"></div>
-
     <div class="input-container">
-      <input type="text" id="userInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter'){sendMessage();}" />
-      <button onclick="sendMessage()">➤</button>
+      <input type="text" id="userInput" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter'){sendMessage();}" />
+      <button onclick="sendMessage()" id="sendButton">➤</button>
+      <span class="loading" id="loadingIndicator" style="display: none;">Đang xử lý...</span>
     </div>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>

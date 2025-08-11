@@ -1,11 +1,11 @@
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Phương thức không được phép' });
   }
 
   const { message } = req.body;
   if (!message) {
-    return res.status(400).json({ error: 'Message is required' });
+    return res.status(400).json({ error: 'Yêu cầu phải có tin nhắn' });
   }
 
   try {
@@ -22,20 +22,34 @@ module.exports = async (req, res) => {
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return res.status(429).json({ error: 'Rate limit exceeded. Please try again later.' });
-      } else if (response.status === 401) {
-        return res.status(401).json({ error: 'Invalid API key.' });
-      } else {
-        return res.status(response.status).json({ error: `HTTP error: ${response.status}` });
+      let errorMessage = 'Lỗi không xác định từ API';
+      try {
+        const errorData = await response.text();
+        if (response.status === 429) {
+          errorMessage = 'Quá giới hạn yêu cầu. Vui lòng thử lại sau.';
+        } else if (response.status === 401) {
+          errorMessage = 'API key không hợp lệ.';
+        } else if (errorData.includes('<!DOCTYPE') || errorData.includes('<html')) {
+          errorMessage = 'Nhận được phản hồi HTML thay vì JSON. Kiểm tra endpoint API.';
+        }
+      } catch (textError) {
+        console.error('Lỗi khi đọc phản hồi:', textError);
       }
+      return res.status(response.status).json({ error: errorMessage });
     }
 
-    const data = await response.json();
-    const aiResponse = data.choices?.[0]?.message?.content || 'No response from AI';
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('Lỗi phân tích JSON:', jsonError);
+      return res.status(500).json({ error: 'Phản hồi API không phải JSON hợp lệ' });
+    }
+
+    const aiResponse = data.choices?.[0]?.message?.content || 'Không nhận được phản hồi từ AI';
     res.status(200).json({ text: aiResponse });
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Lỗi:', error);
+    res.status(500).json({ error: 'Lỗi máy chủ nội bộ' });
   }
 };
