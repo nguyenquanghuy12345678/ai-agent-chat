@@ -1,11 +1,13 @@
 {
   "name": "ai-agent-chat",
   "version": "1.0.0",
-  "description": "A simple AI chat app using xAI Grok API",
-  "main": "index.js",
+  "description": "AI chat app using xAI Grok API",
+  "main": "api/chat.js",
   "scripts": {
     "start": "vercel dev"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@vercel/node": "^2.15.0"
+  },
   "devDependencies": {}
 }
